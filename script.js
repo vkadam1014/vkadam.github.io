@@ -62,8 +62,8 @@ var yAxis = g.append("g");
 
 g.append("text")
   .attr("class", "axis-label")
-  .attr("x", width / 2)
-  .attr("y", height + 45)
+  .attr("x", width / 5)
+  .attr("y", height + 50)
   .attr("text-anchor", "middle")
   .text("Date");
 

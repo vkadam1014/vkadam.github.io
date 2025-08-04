@@ -1,66 +1,63 @@
-// Debug early load
-console.log("script.js loaded");
-console.log("scene title element:", document.getElementById("scenes-title"));
-console.log("group selector element:", document.getElementById("groups"));
-
-// ===== Data groups =====
 const stocks = ["Microsoft_Price", "Tesla_Price", "Apple_Price"];
-const oil = ["Natural_Gas_Price", "Crude_Oil_Price"];
-const commodities = ["Copper_Price", "Platinum_Price", "Silver_Price", "Gold_Price"];
+const oil = ["Natural_Gas_Price"];
+const commodities = ["Platinum_Price", "Silver_Price"];
 
-function getNums(s){
-  if (s == null){
+function getNums(numbers){
+  if (numbers == null){
     return NaN;
   }
-  return +s.toString().replace('/./g', "");
+  return +numbers.toString().replace('/./g', "");
 }
-const getSlashes = d3.timeParse("%m/%d/%y");
-const getDash = d3.timeParse("%d-%m-%Y");
+var getSlashes = d3.timeParse("%m/%d/%y");
+var getDash = d3.timeParse("%d-%m-%Y");
 
-function getDates(s){
-  let d = getSlashes(s);
+function getDates(date){
+  var d = getSlashes(date);
   if(d){
     return d;
   }
-  d = getDash(s);
+  d = getDash(date);
   if(d){
     return d;
   }
-  const normal = new Date(s);
+  var normal = new Date(date);
   return isNaN(normal) ? null : normal;
 }
 
 function getNames(groupName) {
-  if (groupName === "stocks") return stocks;
-  else if (groupName === "oil") return oil;
-  else if (groupName === "commodities") return commodities;
-  else return [];
+  if (groupName === "stocks"){
+    return stocks;
+  } 
+  else if (groupName === "oil"){
+    return oil;
+  } 
+  else{
+    return commodities;
+  }
 }
 
-// ===== Scenes =====
 const scenes = [
   { id: "stocks", title: "Stocks", text: "Stock Trends from 2020-2024", keys: stocks },
-  { id: "oil", title: "Oil & Gas Prices", text: "Oil & Gas Prices from 2020-2024", keys: oil },
+  { id: "oil", title: "Oil Prices", text: "Oil Prices from 2020-2024", keys: oil },
   { id: "commodities", title: "Commodity Prices", text: "Commodity Prices from 2020-2024", keys: commodities }
 ];
 let current = 0;
 
+var svg = d3.select("#chart");
+var margin = { top: 30, right: 70, bottom: 100, left: 50 };
+var width = +svg.attr("width") - margin.left - margin.right;
+var height = +svg.attr("height") - margin.top - margin.bottom;
 
-const svg = d3.select("#chart");
-const margin = { top: 30, right: 100, bottom: 60, left: 70 };
-const width = +svg.attr("width") - margin.left - margin.right;
-const height = +svg.attr("height") - margin.top - margin.bottom;
+var g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+var x = d3.scaleTime().range([0, width]);
+var y = d3.scaleLinear().range([height, 20]);
 
-const x = d3.scaleTime().range([0, width]);
-const y = d3.scaleLinear().range([height, 0]);
+var allKey = [...stocks, ...oil, ...commodities];
+const color = d3.scaleOrdinal().domain(allKey).range(d3.schemeTableau10); 
 
-const allKeys = [...stocks, ...oil, ...commodities];
-const color = d3.scaleOrdinal().domain(allKeys).range(d3.schemeTableau10); 
-
-const xAxisG = g.append("g").attr("transform", `translate(0, ${height})`);
-const yAxisG = g.append("g");
+var xAxis = g.append("g").attr("transform", `translate(0, ${height})`);
+var yAxis = g.append("g");
 
 
 g.append("text")
@@ -88,11 +85,8 @@ async function getData() {
       d["Tesla_Price"] = +d["Tesla_Price"];
       d["Apple_Price"] = +d["Apple_Price"];
       d["Natural_Gas_Price"] = +d["Natural_Gas_Price"];
-      d["Crude_Oil_Price"] = +d["Crude_Oil_Price"];
-      d["Copper_Price"] = +d["Copper_Price"];
       d["Platinum_Price"] = +d["Platinum_Price"];
       d["Silver_Price"] = +d["Silver_Price"];
-      d["Gold_Price"] = +d["Gold_Price"];
       return d;
     });
     data = data.filter(d => d.Date && !isNaN(d.Date));
@@ -111,7 +105,6 @@ function createCharts(keys) {
     return;
   }
 
-  // domains
   x.domain(d3.extent(data, d => d.Date));
   y.domain([
     0,
@@ -119,15 +112,15 @@ function createCharts(keys) {
   ]).nice();
 
 
-  // axes
-  xAxisG.call(d3.axisBottom(x));
-  yAxisG.call(d3.axisLeft(y));
 
-  // clear previous
+  xAxis.call(d3.axisBottom(x));
+  yAxis.call(d3.axisLeft(y));
+
+
   g.selectAll(".series").remove();
   g.selectAll(".annotation").remove();
 
-  // draw each series
+
   keys.forEach((i, j) => {
     const lineGen = d3.line()
       .defined(d => !isNaN(d[i] && d[i] != null))
@@ -152,7 +145,7 @@ function createCharts(keys) {
       .attr("y", y(last[i]))
       .text(i.replace("_Price", ""))
       .attr("fill", color(i))
-      .style("font-size", "12px")
+      .style("font-size", "10px")
       .attr("alignment-baseline", "middle");
 
     
@@ -168,20 +161,24 @@ function createCharts(keys) {
         .attr("x", x(last.Date) + 6)
         .attr("y", y(last[i]) - 8)
         .text(`${i.replace("_Price", "")}`)
+        .text(`${i.replace("_Oil"), ""}`)
+        .text(`${i.replace("_Gas"), ""}`)
         .attr("fill", color(i))
-        .style("font-size", "11px");
+        .style("font-size", "10px");
     }
   });
 }
 
 
 function getScene() {
-  if (!data) return;
+  if (!data){
+    return;
+  } 
 
-  const isExploration = current >= scenes.length;
+  const navigate = current >= scenes.length;
   let keys, title, text;
 
-  if (!isExploration) {
+  if (!navigate) {
     const scene = scenes[current];
     keys = scene.keys;
     title = scene.title;
@@ -190,8 +187,8 @@ function getScene() {
   } else {
     const selected = d3.select("#groups").node().value;
     keys = getNames(selected);
-    title = `View the ${selected.charAt(0).toUpperCase() + selected.slice(1)}`;
-    text = "Free-form comparison after the guided story.";
+    title = `View the ${selected.charAt(0).toUpperCase() + selected.slice(1)} Prices`;
+    text = "Feel free to use the dropdown to see the trends.";
     d3.select("#explore").style("display", "inline-block");
   }
 
@@ -206,18 +203,22 @@ function getScene() {
 
 
 d3.select("#next").on("click", () => {
-  if (current <= scenes.length) current += 1;
+  if (current <= scenes.length){
+    current += 1;
+  } 
   getScene();
 });
 d3.select("#back").on("click", () => {
-  if (current > 0) current -= 1;
+  if (current > 0){
+    current -= 1;
+  } 
   getScene();
 });
 d3.select("#groups").on("change", () => {
-  if (current >= scenes.length) getScene();
+  if (current >= scenes.length){
+    getScene();
+  } 
 });
-
-
 (async () => {
   await getData();
   getScene();

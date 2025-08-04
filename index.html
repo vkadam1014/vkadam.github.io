@@ -4,9 +4,33 @@
         <meta charset="UTF-8">
         <title>US Stocks Narrative Visualization</title>
         <script src="https://d3js.org/d3.v7.min.js"></script>
+        <style>
+            body{ font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;}
+            button{margin: 5px; padding: auto;}
+            .annotation{font-size: 12px; font-weight: bold;}
+            #explore{display: none;}
+        </style>
     </head>
     <body>
-        <h1>Stock Visualization</h1>
+        <h1>Stock, Oil, and Commodity Price Visualization 2020-2024</h1>
+        <div>
+            <h2 id = "scenes-title"></h2>
+            <p id = "scenes-text"></p>
+        </div>
+
+        <div>
+            <button id = "back">Back</button>
+            <button id = "next">Next</button>
+            <span id = "explore">
+                <label for="groups">Select to explore the different trends: </label>
+                <select id="groups">
+                    <option value="stocks">Stocks</option>
+                    <option value="oil">Oil</option>
+                    <option value="commodities">Commodities</option>
+                </select>
+            </span>
+        </div>
+
         <svg id="chart" width="900" height="500"></svg>
         <script src="script.js"></script>
     </body>
